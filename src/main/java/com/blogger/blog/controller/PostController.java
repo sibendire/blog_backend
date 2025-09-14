@@ -87,4 +87,20 @@ public class PostController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+    // ✅ LIKE a post
+    @PutMapping("/{id}/like")
+    public ResponseEntity<Posts> likePost(@PathVariable Long id) {
+        Posts post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+        post.setLikes(post.getLikes() + 1);
+        postRepository.save(post);
+        return ResponseEntity.ok(post);
+    }
+    // In PostController.java
+    @GetMapping("/category/{category}")
+    public List<Posts> getPostsByCategory(@PathVariable String category) {
+        return postRepository.findByCategoryIgnoreCase(category);
+    }
+
+
 }
