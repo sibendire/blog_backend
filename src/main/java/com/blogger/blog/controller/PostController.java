@@ -102,5 +102,12 @@ public class PostController {
         return postRepository.findByCategoryIgnoreCase(category);
     }
 
+    // GET a single post by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Posts> getPostById(@PathVariable Long id) {
+        return postRepository.findById(id)
+                .map(post -> ResponseEntity.ok(post))
+                .orElse(ResponseEntity.notFound().build());
+    }
 
 }

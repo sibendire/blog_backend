@@ -2,6 +2,9 @@ package com.blogger.blog.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -23,5 +26,8 @@ public class Posts {
     private String videoPath; // stores filename
     @Column(nullable = false)
     private Integer likes = 0;
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
 
 }
