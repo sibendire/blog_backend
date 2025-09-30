@@ -35,8 +35,8 @@ public class CustomLoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         request.getSession().setAttribute("loggedInUser", appUser);
 
         // Always redirect to dashboard if needed
-        setDefaultTargetUrl("/primary/dashboard");
-        System.out.println("Redirecting to /primary/dashboard");
+        setDefaultTargetUrl("/");
+        System.out.println("Redirecting to the admin dashboard");
 
         super.onAuthenticationSuccess(request, response, authentication);
     }
