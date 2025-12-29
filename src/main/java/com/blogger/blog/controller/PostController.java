@@ -2,6 +2,8 @@ package com.blogger.blog.controller;
 
 import com.blogger.blog.entities.Posts;
 import com.blogger.blog.repositories.PostRepository;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ public class PostController {
     private PostRepository postRepository;
 
     private final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
+    private Cloudinary cloudinary;
 
     // ✅ GET all posts
     @GetMapping
@@ -38,26 +41,28 @@ public class PostController {
             @RequestParam(value = "video", required = false) MultipartFile video
     ) throws IOException {
 
-        // Ensure upload dir exists
-        File uploadDir = new File(UPLOAD_DIR);
-        if (!uploadDir.exists()) uploadDir.mkdirs();
-
         Posts post = new Posts();
         post.setTitle(title);
         post.setDescription(description);
         post.setCategory(category);
         post.setLikes(0);
 
+        // ✅ Upload image
         if (image != null && !image.isEmpty()) {
-            String fileName = image.getOriginalFilename();
-            image.transferTo(new File(UPLOAD_DIR + fileName));
-            post.setImagePath("/uploads/" + fileName);
+            var result = cloudinary.uploader().upload(
+                    image.getBytes(),
+                    ObjectUtils.asMap("resource_type", "image")
+            );
+            post.setImagePath(result.get("secure_url").toString());
         }
 
+        // ✅ Upload video
         if (video != null && !video.isEmpty()) {
-            String fileName = video.getOriginalFilename();
-            video.transferTo(new File(UPLOAD_DIR + fileName));
-            post.setVideoPath("/uploads/" + fileName);
+            var result = cloudinary.uploader().upload(
+                    video.getBytes(),
+                    ObjectUtils.asMap("resource_type", "video")
+            );
+            post.setVideoPath(result.get("secure_url").toString());
         }
 
         postRepository.save(post);

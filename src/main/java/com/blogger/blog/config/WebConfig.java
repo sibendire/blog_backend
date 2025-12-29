@@ -6,6 +6,8 @@ import com.blogger.blog.repositories.RoleRepository;
 import com.blogger.blog.security.CustomAccessDeniedHandler;
 import com.blogger.blog.security.CustomLoginSuccessHandler;
 import com.blogger.blog.security.CustomUserDetailsService;
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import jakarta.servlet.MultipartConfigElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
@@ -33,7 +35,7 @@ import java.util.List;
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebConfig {
 
-    private final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
+    //private final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
     @Autowired
     private AppUserRepository userRepository;
     @Autowired private RoleRepository roleRepository;
@@ -71,11 +73,11 @@ public class WebConfig {
                 return source;
             }
             // Serve uploaded files
-            @Override
-            public void addResourceHandlers(ResourceHandlerRegistry registry) {
-                registry.addResourceHandler("/uploads/**")
-                        .addResourceLocations("file:" + UPLOAD_DIR);
-            }
+//            @Override
+//            public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//                registry.addResourceHandler("/uploads/**")
+//                        .addResourceLocations("file:" + UPLOAD_DIR);
+//            }
         };
     }
     @Bean
@@ -139,5 +141,13 @@ public class WebConfig {
     }
 
 
-
+    @Bean
+    public Cloudinary cloudinary() {
+        return new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", System.getenv("CLOUDINARY_CLOUD_NAME"),
+                "api_key", System.getenv("CLOUDINARY_API_KEY"),
+                "api_secret", System.getenv("CLOUDINARY_API_SECRET"),
+                "secure", true
+        ));
+    }
 }
