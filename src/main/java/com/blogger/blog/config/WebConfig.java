@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -44,42 +45,58 @@ public class WebConfig {
     @Autowired private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
-    public WebMvcConfigurer webMvcConfigurer() {
-        return new WebMvcConfigurer() {
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:3000",
+                "https://*.onrender.com"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
 
-            // CORS configuration
-//            @Override
-//            public void addCorsMappings(CorsRegistry registry) {
-//                registry.addMapping("/api/**")
-//                        .allowedOrigins("http://localhost:3000")
-//                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-//                        .allowedHeaders("*")
-//                        .allowCredentials(true);
-//            }
-
-            @Bean
-            public CorsConfigurationSource corsConfigurationSource() {
-                CorsConfiguration config = new CorsConfiguration();
-                config.setAllowedOrigins(List.of(
-                        "http://localhost:3000",
-                        System.getenv("https://blog-frontend-kv4q.onrender.com")
-                ));
-                config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
-                config.setAllowedHeaders(List.of("*"));
-                config.setAllowCredentials(true);
-
-                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-                source.registerCorsConfiguration("/**", config);
-                return source;
-            }
-            // Serve uploaded files
-//            @Override
-//            public void addResourceHandlers(ResourceHandlerRegistry registry) {
-//                registry.addResourceHandler("/uploads/**")
-//                        .addResourceLocations("file:" + UPLOAD_DIR);
-//            }
-        };
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
+
+    //    @Bean
+//    public WebMvcConfigurer webMvcConfigurer() {
+//        return new WebMvcConfigurer() {
+//
+//            // CORS configuration
+////            @Override
+////            public void addCorsMappings(CorsRegistry registry) {
+////                registry.addMapping("/api/**")
+////                        .allowedOrigins("http://localhost:3000")
+////                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+////                        .allowedHeaders("*")
+////                        .allowCredentials(true);
+////            }
+//
+//            @Bean
+//            public CorsConfigurationSource corsConfigurationSource() {
+//                CorsConfiguration config = new CorsConfiguration();
+//                config.setAllowedOrigins(List.of(
+//                        "http://localhost:3000",
+//                        System.getenv("https://blog-frontend-kv4q.onrender.com")
+//                ));
+//                config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+//                config.setAllowedHeaders(List.of("*"));
+//                config.setAllowCredentials(true);
+//
+//                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//                source.registerCorsConfiguration("/**", config);
+//                return source;
+//            }
+//            // Serve uploaded files
+////            @Override
+////            public void addResourceHandlers(ResourceHandlerRegistry registry) {
+////                registry.addResourceHandler("/uploads/**")
+////                        .addResourceLocations("file:" + UPLOAD_DIR);
+////            }
+//        };
+//    }
     @Bean
     public MultipartConfigElement multipartConfigElement() {
         MultipartConfigFactory factory = new MultipartConfigFactory();
@@ -110,32 +127,19 @@ public class WebConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> {}) // ✅ Enable CORS globally
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // ✅ allow React signup/login/verify
-                        .requestMatchers("/api/posts/blog/**").permitAll() // optional: if posts should be public
-                        .requestMatchers("/uploads/**").permitAll()  // ✅ allow uploaded images/videos
-                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/posts/blog/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
                         .accessDeniedHandler(customAccessDeniedHandler)
                 )
-                .formLogin(form -> form
-                        .loginPage("/")
-                        .usernameParameter("email")
-                        .passwordParameter("password")
-                        .successHandler(loginSuccessHandler)
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutSuccessUrl("/")
-                        .permitAll()
-                )
-                .sessionManagement(session -> session
-                        .invalidSessionUrl("/?session=invalid")
-                );
+                .formLogin(form -> form.disable())   // 🚨 IMPORTANT
+                .logout(logout -> logout.disable());
 
         return http.build();
     }

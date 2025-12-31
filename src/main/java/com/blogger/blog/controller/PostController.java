@@ -16,13 +16,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts/blog")
-@CrossOrigin(origins = "https://blog-frontend-kv4q.onrender.com")
 public class PostController {
 
     @Autowired
     private PostRepository postRepository;
 
-    private final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
+    @Autowired
     private Cloudinary cloudinary;
 
     // ✅ GET all posts
@@ -31,14 +30,14 @@ public class PostController {
         return postRepository.findAll();
     }
 
-    // ✅ CREATE a new post (form-data with optional image & video)
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    // ✅ CREATE post (multipart)
+    @PostMapping(value = "/multipart", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Posts> createPost(
-            @RequestParam("title") String title,
-            @RequestParam("description") String description,
-            @RequestParam("category") String category,
-            @RequestParam(value = "image", required = false) MultipartFile image,
-            @RequestParam(value = "video", required = false) MultipartFile video
+            @RequestParam String title,
+            @RequestParam String description,
+            @RequestParam String category,
+            @RequestParam(required = false) MultipartFile image,
+            @RequestParam(required = false) MultipartFile video
     ) throws IOException {
 
         Posts post = new Posts();
@@ -47,7 +46,6 @@ public class PostController {
         post.setCategory(category);
         post.setLikes(0);
 
-        // ✅ Upload image
         if (image != null && !image.isEmpty()) {
             var result = cloudinary.uploader().upload(
                     image.getBytes(),
@@ -56,7 +54,6 @@ public class PostController {
             post.setImagePath(result.get("secure_url").toString());
         }
 
-        // ✅ Upload video
         if (video != null && !video.isEmpty()) {
             var result = cloudinary.uploader().upload(
                     video.getBytes(),
@@ -69,50 +66,11 @@ public class PostController {
         return ResponseEntity.ok(post);
     }
 
-    // ✅ CREATE a new post (plain JSON without files)
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    // ✅ CREATE post (JSON)
+    @PostMapping(value = "/json", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Posts> createPostJson(@RequestBody Posts post) {
-        post.setId(null); // force insert
+        post.setId(null);
         postRepository.save(post);
         return ResponseEntity.ok(post);
     }
-
-    // ✅ UPDATE a post
-    @PutMapping("/{id}")
-    public ResponseEntity<Posts> updatePost(@PathVariable Long id, @RequestBody Posts updatedPost) {
-        return postRepository.findById(id)
-                .map(post -> {
-                    post.setTitle(updatedPost.getTitle());
-                    post.setDescription(updatedPost.getDescription());
-                    post.setCategory(updatedPost.getCategory());
-                    post.setImagePath(updatedPost.getImagePath());
-                    post.setVideoPath(updatedPost.getVideoPath());
-                    postRepository.save(post);
-                    return ResponseEntity.ok(post);
-                })
-                .orElse(ResponseEntity.notFound().build());
-    }
-    // ✅ LIKE a post
-    @PutMapping("/{id}/like")
-    public ResponseEntity<Posts> likePost(@PathVariable Long id) {
-        Posts post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-        post.setLikes(post.getLikes() + 1);
-        postRepository.save(post);
-        return ResponseEntity.ok(post);
-    }
-    // In PostController.java
-    @GetMapping("/category/{category}")
-    public List<Posts> getPostsByCategory(@PathVariable String category) {
-        return postRepository.findByCategoryIgnoreCase(category);
-    }
-
-    // GET a single post by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<Posts> getPostById(@PathVariable Long id) {
-        return postRepository.findById(id)
-                .map(post -> ResponseEntity.ok(post))
-                .orElse(ResponseEntity.notFound().build());
-    }
-
 }
