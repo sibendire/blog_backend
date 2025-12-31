@@ -14,6 +14,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+@CrossOrigin(
+        origins = {
+                "http://localhost:3000",
+                "https://blog-frontend-kv4q.onrender.com"
+        },
+        allowCredentials = "true"
+)
 @RestController
 @RequestMapping("/api/posts/blog")
 public class PostController {

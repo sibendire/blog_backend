@@ -47,9 +47,9 @@ public class WebConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of(
+        config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "https://*.onrender.com"
+                "https://blog-frontend-kv4q.onrender.com"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
@@ -59,6 +59,7 @@ public class WebConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
+
 
     //    @Bean
 //    public WebMvcConfigurer webMvcConfigurer() {
@@ -131,14 +132,12 @@ public class WebConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/posts/blog/**").permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .anyRequest().permitAll() // 👈 TEMPORARY to confirm fix
                 )
-                .exceptionHandling(ex -> ex
-                        .accessDeniedHandler(customAccessDeniedHandler)
-                )
-                .formLogin(form -> form.disable())   // 🚨 IMPORTANT
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
                 .logout(logout -> logout.disable());
 
         return http.build();
