@@ -80,4 +80,10 @@ public class PostController {
         postRepository.save(post);
         return ResponseEntity.ok(post);
     }
+    @DeleteMapping("/api/posts/blog/all")
+    public ResponseEntity<String> deleteAllPosts() {
+        postRepository.deleteAll();
+        return ResponseEntity.ok("All posts deleted");
+    }
+
 }
