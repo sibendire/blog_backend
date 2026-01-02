@@ -80,11 +80,17 @@ public class PostController {
         postRepository.save(post);
         return ResponseEntity.ok(post);
     }
+
     @DeleteMapping("/all")
     public ResponseEntity<Void> deleteAllPosts() {
         postRepository.deleteAll();
         return ResponseEntity.noContent().build();
     }
-
+    @GetMapping("/api/posts/blog/{id}")
+    public ResponseEntity<Posts> getPostById(@PathVariable Long id) {
+        return postRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
 }
