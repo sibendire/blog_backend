@@ -92,5 +92,12 @@ public class PostController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    @PutMapping("/api/posts/blog/{id}/like")
+    public ResponseEntity<Posts> likePost(@PathVariable Long id) {
+        return postRepository.findById(id).map(post -> {
+            post.setLikes(post.getLikes() + 1);
+            return ResponseEntity.ok(postRepository.save(post));
+        }).orElse(ResponseEntity.notFound().build());
+    }
 
 }
