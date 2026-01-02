@@ -86,18 +86,22 @@ public class PostController {
         postRepository.deleteAll();
         return ResponseEntity.noContent().build();
     }
-    @GetMapping("/api/posts/blog/{id}")
+    // ✅ GET post by ID
+    @GetMapping("/{id}")
     public ResponseEntity<Posts> getPostById(@PathVariable Long id) {
         return postRepository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    @PutMapping("/api/posts/blog/{id}/like")
+
+    // ✅ LIKE post
+    @PutMapping("/{id}/like")
     public ResponseEntity<Posts> likePost(@PathVariable Long id) {
         return postRepository.findById(id).map(post -> {
             post.setLikes(post.getLikes() + 1);
             return ResponseEntity.ok(postRepository.save(post));
         }).orElse(ResponseEntity.notFound().build());
     }
+
 
 }
